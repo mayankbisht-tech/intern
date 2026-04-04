@@ -3,26 +3,56 @@ import './App.css'
 import OverviewSection from './components/OverviewSection'
 import TransactionsSection from './components/TransactionsSection'
 import { dashboardTransactions } from './data/transactions'
+import TransactionModal from './components/TransactionModal'
 import {
   formatDate,
   formatSignedAmount,
-  getInsightData,
-  getSpendingData,
+  getCategories,
   getSummary,
-  getTrendData,
 } from './utils'
 
 export default function App() {
   const [role, setRole] = useLocalStorage('finance-role', 'viewer')
   const [transactions, setTransactions] = useLocalStorage('finance-transactions', dashboardTransactions)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState(null)
 
   const summary = getSummary(transactions)
-  const trendData = getTrendData(transactions)
-  const spendingData = getSpendingData(transactions)
-  const insightData = getInsightData(role, spendingData, trendData, summary.balance)
+  const categories = getCategories(transactions)
 
   function handleAddClick() {
-    return
+    if (role !== 'admin') {
+      return
+    }
+    setEditingTransaction(null)
+    setIsModalOpen(true)
+  }
+
+  function handleEdit(transaction) {
+    if (role !== 'admin') {
+      return
+    }
+    setEditingTransaction(transaction)
+    setIsModalOpen(true)
+  }
+
+  function handleSave(formValues) {
+    if (editingTransaction) {
+      setTransactions((current) =>
+        current.map((item) => {
+          if (item.id === editingTransaction.id) {
+            return { ...formValues, id: item.id }
+          }
+
+          return item
+        }),
+      )
+    } else {
+      setTransactions((current) => [{ ...formValues, id: crypto.randomUUID() }, ...current])
+    }
+
+    setEditingTransaction(null)
+    setIsModalOpen(false)
   }
 
   return (
@@ -52,18 +82,27 @@ export default function App() {
       <main className="page-content">
         <OverviewSection
           summary={summary}
-          trendData={trendData}
-          spendingData={spendingData}
-          insightData={insightData}
         />
 
         <TransactionsSection
           transactions={transactions}
+          role={role}
+          onEdit={handleEdit}
           formatDate={formatDate}
           formatSignedAmount={formatSignedAmount}
         />
       </main>
 
+      <TransactionModal
+        isOpen={isModalOpen}
+        categories={categories}
+        initialValues={editingTransaction}
+        onClose={() => {
+          setEditingTransaction(null)
+          setIsModalOpen(false)
+        }}
+        onSave={handleSave}
+      />
     </div>
   )
 }

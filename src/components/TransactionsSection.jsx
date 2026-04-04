@@ -7,7 +7,13 @@ const defaultFilters = {
   sortBy: 'date-desc',
 }
 
-export default function TransactionsSection({ transactions, formatDate, formatSignedAmount }) {
+export default function TransactionsSection({
+  transactions,
+  role,
+  onEdit,
+  formatDate,
+  formatSignedAmount,
+}) {
   const [filters, setFilters] = useState(defaultFilters)
 
   const categories = getCategories(transactions)
@@ -19,7 +25,6 @@ export default function TransactionsSection({ transactions, formatDate, formatSi
         <div>
           <h3>Transactions</h3>
         </div>
-        <p className="subtle-text">{filteredTransactions.length} items</p>
       </div>
 
       <div className="filters-grid">
@@ -95,9 +100,10 @@ export default function TransactionsSection({ transactions, formatDate, formatSi
               <tr>
                 <th>Title</th>
                 <th>Date</th>
-                <th>Category</th>
+                <th>Cat</th>
                 <th>Type</th>
-                <th>Amount</th>
+                <th>Amt</th>
+                {role === 'admin' ? <th>Act</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -112,6 +118,13 @@ export default function TransactionsSection({ transactions, formatDate, formatSi
                   <td className={item.type === 'income' ? 'amount-positive' : 'amount-negative'}>
                     {formatSignedAmount(item.amount, item.type)}
                   </td>
+                  {role === 'admin' ? (
+                    <td>
+                      <button className="text-button" type="button" onClick={() => onEdit(item)}>
+                        Edit
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
