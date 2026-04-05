@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import { exportToCSV, exportToJSON } from '../utils'
 
 const defaultFilters = {
   search: '',
   category: 'all',
   type: 'all',
   sortBy: 'date-desc',
+  dateFrom: '',
+  dateTo: '',
+  amountMin: '',
+  amountMax: '',
 }
 
 export default function TransactionsSection({
@@ -24,6 +29,14 @@ export default function TransactionsSection({
       <div className="section-header">
         <div>
           <h3>Transactions</h3>
+        </div>
+        <div className="export-actions">
+          <button className="secondary-button" onClick={() => exportToCSV(filteredTransactions)}>
+            Export CSV
+          </button>
+          <button className="secondary-button" onClick={() => exportToJSON(filteredTransactions)}>
+            Export JSON
+          </button>
         </div>
       </div>
 
@@ -66,6 +79,48 @@ export default function TransactionsSection({
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
+        </div>
+
+        <div className="field-group">
+          <label htmlFor="dateFrom">Date From</label>
+          <input
+            id="dateFrom"
+            type="date"
+            value={filters.dateFrom}
+            onChange={(event) => setFilters({ ...filters, dateFrom: event.target.value })}
+          />
+        </div>
+
+        <div className="field-group">
+          <label htmlFor="dateTo">Date To</label>
+          <input
+            id="dateTo"
+            type="date"
+            value={filters.dateTo}
+            onChange={(event) => setFilters({ ...filters, dateTo: event.target.value })}
+          />
+        </div>
+
+        <div className="field-group">
+          <label htmlFor="amountMin">Min Amount</label>
+          <input
+            id="amountMin"
+            type="number"
+            placeholder="0"
+            value={filters.amountMin}
+            onChange={(event) => setFilters({ ...filters, amountMin: event.target.value })}
+          />
+        </div>
+
+        <div className="field-group">
+          <label htmlFor="amountMax">Max Amount</label>
+          <input
+            id="amountMax"
+            type="number"
+            placeholder="100000"
+            value={filters.amountMax}
+            onChange={(event) => setFilters({ ...filters, amountMax: event.target.value })}
+          />
         </div>
 
         <div className="field-group">
@@ -160,7 +215,13 @@ function getFilteredTransactions(transactions, filters) {
     const matchesCategory = filters.category === 'all' || item.category === filters.category
     const matchesType = filters.type === 'all' || item.type === filters.type
 
-    if (matchesSearch && matchesCategory && matchesType) {
+    const matchesDateFrom = filters.dateFrom === '' || item.date >= filters.dateFrom
+    const matchesDateTo = filters.dateTo === '' || item.date <= filters.dateTo
+
+    const matchesAmountMin = filters.amountMin === '' || item.amount >= Number(filters.amountMin)
+    const matchesAmountMax = filters.amountMax === '' || item.amount <= Number(filters.amountMax)
+
+    if (matchesSearch && matchesCategory && matchesType && matchesDateFrom && matchesDateTo && matchesAmountMin && matchesAmountMax) {
       filteredList.push(item)
     }
   }

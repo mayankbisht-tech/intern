@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import './Modal.css'
 import OverviewSection from './components/OverviewSection'
 import TransactionsSection from './components/TransactionsSection'
 import { dashboardTransactions } from './data/transactions'
@@ -8,16 +9,23 @@ import {
   formatDate,
   formatSignedAmount,
   getCategories,
+  getInsightData,
   getSummary,
+  getSpendingData,
+  getTrendData,
 } from './utils'
 
 export default function App() {
+  const [theme, setTheme] = useLocalStorage('finance-theme', 'light')
   const [role, setRole] = useLocalStorage('finance-role', 'viewer')
   const [transactions, setTransactions] = useLocalStorage('finance-transactions', dashboardTransactions)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
 
   const summary = getSummary(transactions)
+  const trendData = getTrendData(transactions)
+  const spendingData = getSpendingData(transactions)
+  const insightData = getInsightData(trendData, spendingData)
   const categories = getCategories(transactions)
 
   function handleAddClick() {
@@ -56,13 +64,16 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${theme}`}>
       <header className="topbar">
         <div>
           <h1>Finance Dashboard</h1>
         </div>
 
         <div className="topbar-actions">
+          <button className="theme-toggle" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+            {theme === 'light' ? 'Light' : 'Dark'}
+          </button>
           <div className="field-group inline-field">
             <label htmlFor="role">Role</label>
             <select id="role" value={role} onChange={(event) => setRole(event.target.value)}>
@@ -72,7 +83,7 @@ export default function App() {
           </div>
 
           {role === 'admin' ? (
-            <button className="primary-button" type="button" onClick={handleAddClick}>
+            <button className="theme-toggle" type="button" onClick={handleAddClick}>
               Add
             </button>
           ) : null}
@@ -82,6 +93,9 @@ export default function App() {
       <main className="page-content">
         <OverviewSection
           summary={summary}
+          trendData={trendData}
+          spendingData={spendingData}
+          insightData={insightData}
         />
 
         <TransactionsSection
