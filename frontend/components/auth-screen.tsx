@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { AuthForm } from '@/components/auth-form'
 
 type AuthTab = 'student' | 'admin'
@@ -91,9 +91,13 @@ export function AuthScreen({
 
       <div className="mx-auto w-full max-w-lg">
         {tab === 'student' ? (
-          <AuthForm mode={studentMode} />
+          <Suspense fallback={<div className="h-96 rounded-3xl border bg-white/95 animate-pulse" />}>
+            <AuthForm mode={studentMode} />
+          </Suspense>
         ) : (
-          <AuthForm mode="login" />
+          <Suspense fallback={<div className="h-96 rounded-3xl border bg-white/95 animate-pulse" />}>
+            <AuthForm mode="login" />
+          </Suspense>
         )}
         {tab === 'admin' ? (
           <p className="mt-4 text-center text-sm text-blue-slate">
