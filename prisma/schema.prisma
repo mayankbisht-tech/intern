@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int               @id @default(autoincrement())
+  name              String
+  email             String            @unique
+  passwordHash      String
+  role              UserRole          @default(STUDENT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  savedColleges     SavedCollege[]
+  savedComparisons  SavedComparison[]
+  reviews           Review[]
+}
+
+model College {
+  id                Int               @id @default(autoincrement())
+  slug              String            @unique
+  name              String
+  location          String
+  city              String            @default("")
+  state             String
+  fees              Int
+  rating            Float             @default(0) // 0-5
+  logoUrl           String            @default("")
+  shortDescription  String
+  overview          String
+  placementPercent  Float
+  averagePackage    Int
+  bannerImage       String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  courses           Course[]
+  placements        Placement[]
+  reviews           Review[]
+  savedColleges     SavedCollege[]
+  comparisonItems   SavedComparisonItem[]
+}
+
+model Course {
+  id         Int      @id @default(autoincrement())
+  collegeId  Int
+  name       String
+  degree     String
+  duration   String
+  fees       Int
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Placement {
+  id                Int      @id @default(autoincrement())
+  collegeId         Int
+  avgPackage        Int
+  highestPackage    Int
+  placementRate     Float    @default(0) // 0-100
+  year              Int      @default(2024)
+  createdAt         DateTime @default(now())
+  college           College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  collegeId  Int
+  userId     Int
+  rating     Int      // 1-5
+  body       String   // 20-1000 chars
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
+
+model SavedCollege {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  collegeId  Int
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
+
+model SavedComparison {
+  id         Int                  @id @default(autoincrement())
+  userId     Int
+  title      String
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      SavedComparisonItem[]
+}
+
+model SavedComparisonItem {
+  id                Int              @id @default(autoincrement())
+  comparisonId      Int
+  collegeId         Int
+  orderIndex        Int
+  comparison        SavedComparison  @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  college           College          @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonId, collegeId])
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
